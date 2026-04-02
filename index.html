@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="계산기" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>배율 계산기</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f0f0;
+      --muted: #888;
+      --accent-a: #c8f55a;
+      --accent-b: #5af5c8;
+      --accent-c: #f5a05a;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 0);
+    }
+
+    header {
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    header h1 {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    header span {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .input-section {
+      padding: 20px 24px 0;
+    }
+
+    .input-label {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--text);
+      padding: 18px 20px;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+
+    .input-wrapper input::placeholder {
+      color: rgba(255,255,255,0.15);
+    }
+
+    .clear-btn {
+      padding: 0 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .clear-btn.visible { opacity: 1; }
+
+    .results {
+      flex: 1;
+      padding: 20px 24px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.15s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 20px 20px 0 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card.a::before { background: var(--accent-a); }
+    .card.b::before { background: var(--accent-b); }
+    .card.c::before { background: var(--accent-c); }
+
+    .card.active::before { opacity: 1; }
+    .card.active { border-color: rgba(255,255,255,0.12); }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .multiplier-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+    }
+
+    .card.a .multiplier-badge { background: rgba(200,245,90,0.12); color: var(--accent-a); }
+    .card.b .multiplier-badge { background: rgba(90,245,200,0.12); color: var(--accent-b); }
+    .card.c .multiplier-badge { background: rgba(245,160,90,0.12); color: var(--accent-c); }
+
+    .card-desc {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .card-result {
+      font-family: 'DM Mono', monospace;
+      font-size: 34px;
+      font-weight: 500;
+      color: var(--text);
+      margin-top: 12px;
+      letter-spacing: -0.02em;
+      transition: opacity 0.2s;
+    }
+
+    .card-result.empty {
+      color: rgba(255,255,255,0.1);
+    }
+
+    .card-formula {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.2);
+      margin-top: 6px;
+      transition: opacity 0.2s;
+    }
+
+    @media (max-height: 700px) {
+      .card-result { font-size: 26px; }
+      header { padding: 16px 24px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>배율 계산기</h1>
+  <span>× 0.94 / 1.06 / 1.15</span>
+</header>
+
+<div class="input-section">
+  <p class="input-label">숫자 입력</p>
+  <div class="input-wrapper">
+    <input
+      type="number"
+      id="numInput"
+      inputmode="decimal"
+      placeholder="0"
+      autocomplete="off"
+      oninput="calculate()"
+    />
+    <button class="clear-btn" id="clearBtn" onclick="clearInput()">⌫</button>
+  </div>
+</div>
+
+<div class="results">
+  <div class="card a" id="card-a">
+    <div class="card-top">
+      <span class="multiplier-badge">× 0.94</span>
+      <span class="card-desc">6% 감소</span>
+    </div>
+    <div>
+      <div class="card-result empty" id="res-94">—</div>
+      <div class="card-formula" id="formula-94"></div>
+    </div>
+  </div>
+
+  <div class="card b" id="card-b">
+    <div class="card-top">
+      <span class="multiplier-badge">× 1.06</span>
+      <span class="card-desc">6% 증가</span>
+    </div>
+    <div>
+      <div class="card-result empty" id="res-106">—</div>
+      <div class="card-formula" id="formula-106"></div>
+    </div>
+  </div>
+
+  <div class="card c" id="card-c">
+    <div class="card-top">
+      <span class="multiplier-badge">× 1.15</span>
+      <span class="card-desc">15% 증가</span>
+    </div>
+    <div>
+      <div class="card-result empty" id="res-115">—</div>
+      <div class="card-formula" id="formula-115"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function fmt(n) {
+    if (Number.isInteger(n)) return n.toLocaleString('ko-KR');
+    return parseFloat(n.toFixed(4)).toLocaleString('ko-KR', { maximumFractionDigits: 4 });
+  }
+
+  function calculate() {
+    const raw = document.getElementById('numInput').value;
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.classList.toggle('visible', raw.length > 0);
+
+    const v = parseFloat(raw);
+    const cards = [
+      { resId: 'res-94', fId: 'formula-94', cardId: 'card-a', mul: 0.94 },
+      { resId: 'res-106', fId: 'formula-106', cardId: 'card-b', mul: 1.06 },
+      { resId: 'res-115', fId: 'formula-115', cardId: 'card-c', mul: 1.15 },
+    ];
+
+    if (isNaN(v) || raw === '') {
+      cards.forEach(({ resId, fId, cardId }) => {
+        const el = document.getElementById(resId);
+        el.textContent = '—';
+        el.className = 'card-result empty';
+        document.getElementById(fId).textContent = '';
+        document.getElementById(cardId).classList.remove('active');
+      });
+      return;
+    }
+
+    cards.forEach(({ resId, fId, cardId, mul }) => {
+      const result = v * mul;
+      const el = document.getElementById(resId);
+      el.textContent = fmt(result);
+      el.className = 'card-result';
+      document.getElementById(fId).textContent = `${fmt(v)} × ${mul} = ${fmt(result)}`;
+      document.getElementById(cardId).classList.add('active');
+    });
+  }
+
+  function clearInput() {
+    document.getElementById('numInput').value = '';
+    calculate();
+    document.getElementById('numInput').focus();
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
+</script>
+</body>
+</html>
