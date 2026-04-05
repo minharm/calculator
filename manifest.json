@@ -1,7 +1,7 @@
 {
   "name": "배율 계산기",
   "short_name": "계산기",
-  "description": "0.94 / 1.06 / 1.15 배율 계산기",
+  "description": "0.94 / 1.1 / 1.2 배율 계산기",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0f0f",
