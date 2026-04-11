@@ -1,4 +1,4 @@
-const CACHE = 'multiplier-v2';  // v1 → v2 변경
+const CACHE = 'multiplier-v3';  // v1 → v2 변경
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
